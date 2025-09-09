@@ -20,7 +20,7 @@ app = FastAPI()
 # Enable CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000" ,"https://frontend-a5lr.onrender.com"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -220,4 +220,5 @@ def delete_order(order_id: int, db: Session = Depends(get_db)):
 @app.get("/")
 def root():
     return {"message": "Welcome to the eCommerce backend!"}
+
 
