@@ -47,11 +47,12 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     return new_user
 
 @app.post("/login")
-def login(user: UserCreate, db: Session = Depends(get_db)):
+def login(user: UserLogin, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.username == user.username).first()
     if not db_user or not verify_password(user.password, db_user.password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     return {"username": db_user.username, "role": db_user.role}
+
 
 # -------- CATEGORIES --------
 @app.get("/categories", response_model=list[CategoryOut])
@@ -220,5 +221,6 @@ def delete_order(order_id: int, db: Session = Depends(get_db)):
 @app.get("/")
 def root():
     return {"message": "Welcome to the eCommerce backend!"}
+
 
 
