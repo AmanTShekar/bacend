@@ -10,6 +10,7 @@ from schemas import (
     CategoryBase, CategoryOut,
     OrderBase, OrderOut
 )
+from schemas import UserLogin
 from auth import hash_password, verify_password
 
 # Create tables
@@ -221,6 +222,7 @@ def delete_order(order_id: int, db: Session = Depends(get_db)):
 @app.get("/")
 def root():
     return {"message": "Welcome to the eCommerce backend!"}
+
 
 
 
