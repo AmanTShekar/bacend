@@ -1,6 +1,10 @@
 from pydantic import BaseModel
 
 # === USER SCHEMAS ===
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
 class UserCreate(BaseModel):
     username: str
     password: str
@@ -73,3 +77,4 @@ class OrderOut(OrderBase):
 
     class Config:
         from_attributes = True
+
