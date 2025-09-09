@@ -216,3 +216,8 @@ def delete_order(order_id: int, db: Session = Depends(get_db)):
     db.delete(db_order)
     db.commit()
     return {"detail": "Order deleted"}
+
+@app.get("/")
+def root():
+    return {"message": "Welcome to the eCommerce backend!"}
+
