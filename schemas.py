@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 
 # === USER SCHEMAS ===
 class UserLogin(BaseModel):
@@ -18,6 +19,7 @@ class UserOut(BaseModel):
     class Config:
         from_attributes = True  # Pydantic v2
 
+
 # === CATEGORY SCHEMAS ===
 class CategoryBase(BaseModel):
     name: str
@@ -27,6 +29,7 @@ class CategoryOut(CategoryBase):
 
     class Config:
         from_attributes = True
+
 
 # === OFFER SCHEMAS ===
 class OfferBase(BaseModel):
@@ -39,27 +42,18 @@ class OfferOut(OfferBase):
     class Config:
         from_attributes = True
 
+
 # === PRODUCT SCHEMAS ===
 class ProductBase(BaseModel):
     title: str
     price: float
-    description: str | None = None
-    image: str | None = None
+    description: Optional[str] = None
+    image: Optional[str] = None
     category_id: int
-    offer_id: int | None = None
+    offer_id: Optional[int] = None
 
-# === PRODUCT SCHEMAS ===
-from pydantic import BaseModel
-from typing import Optional
-
-class ProductOut(BaseModel):
+class ProductOut(ProductBase):
     id: int
-    title: str
-    price: float
-    description: str
-    image: str
-    category: CategoryOut         # Nested category
-    offer: Optional[OfferOut] = None  # Nested offer
 
     class Config:
         from_attributes = True
@@ -77,4 +71,3 @@ class OrderOut(OrderBase):
 
     class Config:
         from_attributes = True
-
