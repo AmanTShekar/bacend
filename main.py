@@ -4,14 +4,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from database import Base, engine, SessionLocal
 from models import User, Product, Offer, Category, Order
 from schemas import (
-    UserCreate, UserOut,
+    UserCreate, UserOut, UserLogin,
     ProductBase, ProductOut,
-    OfferBase, OfferOut,    # ✅ Add these
+    OfferBase, OfferOut,
     CategoryBase, CategoryOut,
     OrderBase, OrderOut
 )
-from schemas import UserLogin
 from auth import hash_password, verify_password
+from pydantic import BaseModel
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -21,7 +21,11 @@ app = FastAPI()
 # Enable CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000" ,"https://frontend-a5lr.onrender.com"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://frontend-a5lr.onrender.com"  # your Render frontend
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -87,6 +91,7 @@ def delete_category(category_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"detail": "Category deleted"}
 
+
 # -------- OFFERS --------
 @app.get("/offers", response_model=list[OfferOut])
 def get_offers(db: Session = Depends(get_db)):
@@ -120,24 +125,11 @@ def delete_offer(offer_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"detail": "Offer deleted"}
 
+
 # -------- PRODUCTS --------
 @app.get("/products", response_model=list[ProductOut])
 def get_products(db: Session = Depends(get_db)):
-    products = db.query(Product).all()
-    return [
-        ProductOut(
-            id=p.id,
-            title=p.title,
-            price=p.price,
-            description=p.description,
-            image=p.image,
-            category=p.category,   # pass the relationship object
-            offer=p.offer          # pass offer relationship (or None)
-        )
-        for p in products
-    ]
-
-
+    return db.query(Product).all()
 
 @app.post("/products", response_model=ProductOut)
 def create_product(product: ProductBase, db: Session = Depends(get_db)):
@@ -145,15 +137,7 @@ def create_product(product: ProductBase, db: Session = Depends(get_db)):
     db.add(new_product)
     db.commit()
     db.refresh(new_product)
-    return ProductOut(
-        id=new_product.id,
-        title=new_product.title,
-        price=new_product.price,
-        description=new_product.description,
-        image=new_product.image,
-        category=new_product.category,  # relationship object
-        offer=new_product.offer         # relationship object
-    )
+    return new_product
 
 @app.put("/products/{product_id}", response_model=ProductOut)
 def update_product(product_id: int, product: ProductBase, db: Session = Depends(get_db)):
@@ -164,16 +148,7 @@ def update_product(product_id: int, product: ProductBase, db: Session = Depends(
         setattr(db_product, key, value)
     db.commit()
     db.refresh(db_product)
-    return ProductOut(
-        id=db_product.id,
-        title=db_product.title,
-        price=db_product.price,
-        description=db_product.description,
-        image=db_product.image,
-        category_id=db_product.category_id,
-        offer_id=db_product.offer_id,
-        category=db_product.category.name if db_product.category else None
-    )
+    return db_product
 
 @app.delete("/products/{product_id}")
 def delete_product(product_id: int, db: Session = Depends(get_db)):
@@ -183,6 +158,7 @@ def delete_product(product_id: int, db: Session = Depends(get_db)):
     db.delete(db_product)
     db.commit()
     return {"detail": "Product deleted"}
+
 
 # -------- ORDERS --------
 @app.get("/orders", response_model=list[OrderOut])
@@ -200,12 +176,16 @@ def create_order(order: OrderBase, db: Session = Depends(get_db)):
     db.refresh(new_order)
     return new_order
 
+# ✅ Fix: use JSON body for status updates
+class OrderStatusUpdate(BaseModel):
+    status: str
+
 @app.patch("/orders/{order_id}", response_model=OrderOut)
-def update_order_status(order_id: int, status: str, db: Session = Depends(get_db)):
+def update_order_status(order_id: int, update: OrderStatusUpdate, db: Session = Depends(get_db)):
     db_order = db.query(Order).filter(Order.id == order_id).first()
     if not db_order:
         raise HTTPException(status_code=404, detail="Order not found")
-    db_order.status = status
+    db_order.status = update.status
     db.commit()
     db.refresh(db_order)
     return db_order
@@ -219,11 +199,9 @@ def delete_order(order_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"detail": "Order deleted"}
 
+
+# -------- ROOT --------
 @app.get("/")
 def root():
     return {"message": "Welcome to the eCommerce backend!"}
-
-
-
-
 
